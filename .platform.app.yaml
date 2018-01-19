@@ -80,6 +80,7 @@ hooks:
   build: |
     env
     composer global require hirak/prestissimo
+    composer create-project --repository-url=https://repo.magento.com/ magento/project-enterprise-edition magento
     composer install --working-dir=magento --no-interaction --no-dev --optimize-autoloader
     php ./bin/plsh-magento-build.php
   deploy: |

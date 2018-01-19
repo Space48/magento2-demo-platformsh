@@ -1747,7 +1747,7 @@ idsList.add(vars.get("customer_id"));</stringProp>
     </hashTree>
   
     <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Cache" enabled="true">
-  <stringProp name="TestPlan.comments">mpaf/tool/fragments/ce/setup/cache.jmx</stringProp>
+  <stringProp name="TestPlan.comments">mpaf/tool/fragments/ee/setup/cache.jmx</stringProp>
 </TestFragmentController>
     <hashTree>
       <IfController guiclass="IfControllerPanel" testclass="IfController" testname="If Controller: Disable cache type?" enabled="true">
@@ -1757,7 +1757,7 @@ idsList.add(vars.get("customer_id"));</stringProp>
       <hashTree>
         <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="SetUp - BeanShell Sampler: resolve cache types" enabled="true">
           <stringProp name="BeanShellSampler.query">// Default to disable all cache types
-vars.put("cache_types", "config,layout,block_html,collections,reflection,db_ddl,eav,config_integration,full_page,translate,config_webservice,config_integration_api");
+vars.put("cache_types", "config,layout,block_html,collections,reflection,db_ddl,eav,config_integration,full_page,target_rule,translate,config_webservice,config_integration_api");
 
 if ("${cache_indicator}" == "1") {
 	// Only disable Full Page Cache
@@ -1769,7 +1769,7 @@ if ("${cache_indicator}" == "1") {
           <boolProp name="BeanShellSampler.resetInterpreter">false</boolProp>
         </BeanShellSampler>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="SetUp - HTTP Request: Admin - Disable Specific Cache Types" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="SetUp - HTTP Request: Disable Specific Cache Types" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="form_key" elementType="HTTPArgument">
@@ -1862,6 +1862,7 @@ if ("${cache_indicator}" == "1") {
               <stringProp name="-72935653">INTEGRATION_API_CONFIG(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
               <stringProp name="330643820">WEBSERVICE(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
               <stringProp name="-479894558">REFLECTION(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
+              <stringProp name="1450477507">TARGET_RULE(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
             </collectionProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
             <boolProp name="Assertion.assume_success">false</boolProp>
@@ -1919,6 +1920,7 @@ if ("${cache_indicator}" == "1") {
               <stringProp name="-72935653">INTEGRATION_API_CONFIG(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
               <stringProp name="330643820">WEBSERVICE(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
               <stringProp name="-479894558">REFLECTION(?s).+?&lt;span&gt;Enabled&lt;/span&gt;</stringProp>
+              <stringProp name="46789595">TARGET_RULE(?s).+?&lt;span&gt;Enabled&lt;/span</stringProp>
             </collectionProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
             <boolProp name="Assertion.assume_success">false</boolProp>
@@ -1976,6 +1978,7 @@ if ("${cache_indicator}" == "1") {
               <stringProp name="1542403370">INTEGRATION_API_CONFIG(?s).+?&lt;span&gt;Disabled&lt;/span&gt;</stringProp>
               <stringProp name="1168465145">WEBSERVICE(?s).+?&lt;span&gt;Disabled&lt;/span&gt;</stringProp>
               <stringProp name="1811579203">REFLECTION(?s).+?&lt;span&gt;Disabled&lt;/span&gt;</stringProp>
+              <stringProp name="49147452">TARGET_RULE(?s).+?&lt;span&gt;Disabled&lt;/span</stringProp>
             </collectionProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
             <boolProp name="Assertion.assume_success">false</boolProp>
@@ -17503,6 +17506,54 @@ if (testLabel
         </BeanShellSampler>
         <hashTree/>
     
+        <JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Get admin form key PostProcessor" enabled="true">
+        <stringProp name="script">
+        function getFormKeyFromResponse()
+        {
+            var url = prev.getUrlAsString(),
+            responseCode =  prev.getResponseCode(),
+            formKey = null;
+            searchPattern = /var FORM_KEY = '(.+)'/;
+            if (responseCode == "200" &amp;&amp; url) {
+                response = prev.getResponseDataAsString();
+                formKey = response  &amp;&amp; response.match(searchPattern) ? response.match(searchPattern)[1] : null;
+            }
+            return formKey;
+        }
+
+        formKey = vars.get("form_key_storage");
+
+	   currentFormKey = getFormKeyFromResponse();
+
+	   if (currentFormKey != null &amp;&amp; currentFormKey != formKey) {
+		  vars.put("form_key_storage", currentFormKey);
+	   }
+        </stringProp>
+        <stringProp name="scriptLanguage">javascript</stringProp>
+        <stringProp name="TestPlan.comments">mpaf/tool/fragments/ce/admin/handle_admin_form_key.jmx</stringProp></JSR223PostProcessor>
+        <hashTree/>
+        <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Set admin form key PreProcessor" enabled="true">
+            <stringProp name="script">
+                formKey =  vars.get("form_key_storage");
+                if (formKey
+                    &amp;&amp; sampler.getClass().getName() == 'org.apache.jmeter.protocol.http.sampler.HTTPSamplerProxy'
+                    &amp;&amp; sampler.getMethod() == "POST")
+                    {
+                        arguments = sampler.getArguments();
+                        for (i=0; i&lt;arguments.getArgumentCount(); i++)
+                        {
+                            argument = arguments.getArgument(i);
+                            if (argument.getName() == 'form_key' &amp;&amp; argument.getValue() != formKey) {
+                            log.info("admin form key updated: " + argument.getValue() + " =&gt; " + formKey);
+                            argument.setValue(formKey);
+                        }
+                    }
+                }
+            </stringProp>
+            <stringProp name="scriptLanguage">javascript</stringProp>
+        </JSR223PreProcessor>
+        <hashTree/>
+    
     <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
       <collectionProp name="CookieManager.cookies"/>
       <boolProp name="CookieManager.clearEachIteration">false</boolProp>
@@ -17815,13 +17866,13 @@ adminCategoryIdsList.add(vars.get("category_id"));</stringProp>
     <TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Admin Category Management" enabled="true"/>
     <hashTree>
       <BeanShellSampler guiclass="BeanShellSamplerGui" testclass="BeanShellSampler" testname="SetUp - Set Arguments" enabled="true">
-        <stringProp name="TestPlan.comments">mpaf/tool/fragments/ce/admin_category_management/admin_category_management.jmx</stringProp>
+        <stringProp name="TestPlan.comments">mpaf/tool/fragments/ee/admin_category_management/admin_category_management.jmx</stringProp>
         <stringProp name="BeanShellSampler.query">import org.apache.jmeter.samplers.SampleResult;
 import java.util.ArrayList;
 import java.util.Random;
 Random random = new Random();
 if (${seedForRandom} &gt; 0) {
-random.setSeed(${seedForRandom});
+  random.setSeed(${seedForRandom});
 }
 number = random.nextInt(props.get("simple_products_list").size());
 simpleList = props.get("simple_products_list").get(number);
@@ -17830,7 +17881,7 @@ vars.put("simple_product_1_name", simpleList.get("title"));
 vars.put("simple_product_1_id", simpleList.get("id"));
 
 do {
-number1 = random.nextInt(props.get("simple_products_list").size());
+    number1 = random.nextInt(props.get("simple_products_list").size());
 } while(number == number1);
 simpleList = props.get("simple_products_list").get(number1);
 vars.put("simple_product_2_url_key", simpleList.get("url_key"));
@@ -17838,7 +17889,7 @@ vars.put("simple_product_2_name", simpleList.get("title"));
 vars.put("simple_product_2_id", simpleList.get("id"));
 
 do {
-number2 = random.nextInt(props.get("simple_products_list").size());
+    number2 = random.nextInt(props.get("simple_products_list").size());
 } while(number2 == number1 || number2 == number);
 simpleList = props.get("simple_products_list").get(number2);
 vars.put("simple_product_3_url_key", simpleList.get("url_key"));
@@ -17846,7 +17897,7 @@ vars.put("simple_product_3_name", simpleList.get("title"));
 vars.put("simple_product_3_id", simpleList.get("id"));
 
 do {
-number3 = random.nextInt(props.get("simple_products_list").size());
+    number3 = random.nextInt(props.get("simple_products_list").size());
 } while(number3 == number2 || number3 == number1 || number3 == number);
 simpleList = props.get("simple_products_list").get(number3);
 vars.put("simple_product_4_url_key", simpleList.get("url_key"));
@@ -17854,7 +17905,7 @@ vars.put("simple_product_4_name", simpleList.get("title"));
 vars.put("simple_product_4_id", simpleList.get("id"));
 
 do {
-number4 = random.nextInt(props.get("simple_products_list").size());
+    number4 = random.nextInt(props.get("simple_products_list").size());
 } while(number4 == number3 || number4 == number2 || number4 == number1 || number4 == number);
 simpleList = props.get("simple_products_list").get(number4);
 vars.put("simple_product_5_url_key", simpleList.get("url_key"));
@@ -17864,7 +17915,7 @@ vars.put("simple_product_5_id", simpleList.get("id"));
 categoryIndex = random.nextInt(props.get("admin_category_ids_list").size());
 vars.put("parent_category_id", props.get("admin_category_ids_list").get(categoryIndex));
 do {
-categoryIndexNew = random.nextInt(props.get("admin_category_ids_list").size());
+	categoryIndexNew = random.nextInt(props.get("admin_category_ids_list").size());
 } while(categoryIndex == categoryIndexNew);
 vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(categoryIndexNew));</stringProp>
         <stringProp name="BeanShellSampler.filename"/>
@@ -17872,57 +17923,6 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
         <boolProp name="BeanShellSampler.resetInterpreter">true</boolProp>
       </BeanShellSampler>
       <hashTree/>
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Landing Page" enabled="true">
-        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
-          <collectionProp name="Arguments.arguments"/>
-        </elementProp>
-        <stringProp name="HTTPSampler.domain"/>
-        <stringProp name="HTTPSampler.port"/>
-        <stringProp name="HTTPSampler.connect_timeout"/>
-        <stringProp name="HTTPSampler.response_timeout"/>
-        <stringProp name="HTTPSampler.protocol">${request_protocol}</stringProp>
-        <stringProp name="HTTPSampler.contentEncoding"/>
-        <stringProp name="HTTPSampler.path">${base_path}${admin_path}/catalog/category/</stringProp>
-        <stringProp name="HTTPSampler.method">GET</stringProp>
-        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-        <boolProp name="HTTPSampler.monitor">false</boolProp>
-        <stringProp name="HTTPSampler.embedded_url_re"/>
-      </HTTPSamplerProxy>
-      <hashTree>
-        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-          <collectionProp name="HeaderManager.headers">
-            <elementProp name="Accept-Language" elementType="Header">
-              <stringProp name="Header.name">Accept-Language</stringProp>
-              <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-            </elementProp>
-            <elementProp name="Accept" elementType="Header">
-              <stringProp name="Header.name">Accept</stringProp>
-              <stringProp name="Header.value">text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</stringProp>
-            </elementProp>
-            <elementProp name="User-Agent" elementType="Header">
-              <stringProp name="Header.name">User-Agent</stringProp>
-              <stringProp name="Header.value">Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0</stringProp>
-            </elementProp>
-            <elementProp name="Accept-Encoding" elementType="Header">
-              <stringProp name="Header.name">Accept-Encoding</stringProp>
-              <stringProp name="Header.value">gzip, deflate</stringProp>
-            </elementProp>
-          </collectionProp>
-        </HeaderManager>
-        <hashTree/>
-        <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract form key" enabled="true">
-          <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-          <stringProp name="RegexExtractor.refname">admin_form_key</stringProp>
-          <stringProp name="RegexExtractor.regex">&lt;input name="form_key" type="hidden" value="([^'"]+)" /&gt;</stringProp>
-          <stringProp name="RegexExtractor.template">$1$</stringProp>
-          <stringProp name="RegexExtractor.default"/>
-          <stringProp name="RegexExtractor.match_number">1</stringProp>
-        </RegexExtractor>
-        <hashTree/>
-      </hashTree>
       <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Select parent category" enabled="true">
         <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
           <collectionProp name="Arguments.arguments"/>
@@ -17995,7 +17995,7 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
         </ResponseAssertion>
         <hashTree/>
       </hashTree>
-      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create category" enabled="true">
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Create empty category" enabled="true">
         <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
           <collectionProp name="Arguments.arguments">
             <elementProp name="id" elementType="HTTPArgument">
@@ -18103,6 +18103,13 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
               <boolProp name="HTTPArgument.use_equals">true</boolProp>
               <stringProp name="Argument.name">name</stringProp>
             </elementProp>
+            <elementProp name="filter_price_range" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">filter_price_range</stringProp>
+            </elementProp>
             <elementProp name="url_key" elementType="HTTPArgument">
               <boolProp name="HTTPArgument.always_encode">true</boolProp>
               <stringProp name="Argument.value">admin-category-management-${__time(YMDHMS)}-${__threadNum}-${__Random(1,1000000)}</stringProp>
@@ -18159,12 +18166,33 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
               <boolProp name="HTTPArgument.use_equals">true</boolProp>
               <stringProp name="Argument.name">custom_layout_update</stringProp>
             </elementProp>
-            <elementProp name="category_products" elementType="HTTPArgument">
-              <boolProp name="HTTPArgument.always_encode">false</boolProp>
-              <stringProp name="Argument.value">{"${simple_product_1_id}":"","${simple_product_2_id}":"","${simple_product_3_id}":"","${simple_product_4_id}":"","${simple_product_5_id}":""}</stringProp>
+            <elementProp name="position_cache_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${position_cache_key}</stringProp>
               <stringProp name="Argument.metadata">=</stringProp>
               <boolProp name="HTTPArgument.use_equals">true</boolProp>
-              <stringProp name="Argument.name">category_products</stringProp>
+              <stringProp name="Argument.name">position_cache_key</stringProp>
+            </elementProp>
+            <elementProp name="is_smart_category" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">is_smart_category</stringProp>
+            </elementProp>
+            <elementProp name="sort_order" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">sort_order</stringProp>
+            </elementProp>
+            <elementProp name="vm_category_products" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">false</boolProp>
+              <stringProp name="Argument.value">[]</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">vm_category_products</stringProp>
             </elementProp>
             <elementProp name="form_key" elementType="HTTPArgument">
               <boolProp name="HTTPArgument.always_encode">true</boolProp>
@@ -18255,8 +18283,8 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
         <hashTree/>
         <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract category row id" enabled="true">
           <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-          <stringProp name="RegexExtractor.refname">admin_category_entity_id</stringProp>
-          <stringProp name="RegexExtractor.regex">"entity_id":"([^"]+)"</stringProp>
+          <stringProp name="RegexExtractor.refname">admin_category_row_id</stringProp>
+          <stringProp name="RegexExtractor.regex">"row_id":"([^"]+)"</stringProp>
           <stringProp name="RegexExtractor.template">$1$</stringProp>
           <stringProp name="RegexExtractor.default"/>
           <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18351,7 +18379,7 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
           <boolProp name="Assertion.assume_success">false</boolProp>
           <intProp name="Assertion.test_type">1</intProp>
           <stringProp name="Assertion.scope">variable</stringProp>
-          <stringProp name="Scope.variable">admin_category_entity_id</stringProp>
+          <stringProp name="Scope.variable">admin_category_row_id</stringProp>
         </ResponseAssertion>
         <hashTree/>
         <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert category attribute set id" enabled="true">
@@ -18453,19 +18481,451 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
           <stringProp name="Scope.variable">admin_category_url_path</stringProp>
         </ResponseAssertion>
         <hashTree/>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert products added" enabled="true">
-            <collectionProp name="Asserion.test_strings">
-              <stringProp name="417284990">${simple_product_1_name}</stringProp>
-              <stringProp name="1304788671">${simple_product_2_name}</stringProp>
-              <stringProp name="-2102674944">${simple_product_3_name}</stringProp>
-              <stringProp name="-1215171263">${simple_product_4_name}</stringProp>
-              <stringProp name="-327667582">${simple_product_5_name}</stringProp>
-            </collectionProp>
-            <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
-            <boolProp name="Assertion.assume_success">false</boolProp>
-            <intProp name="Assertion.test_type">2</intProp>
-          </ResponseAssertion>
-          <hashTree/>
+      </hashTree>
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Add products" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="category_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">category_id</stringProp>
+            </elementProp>
+            <elementProp name="positions" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">{"${simple_product_1_id}":"0","${simple_product_2_id}":"1","${simple_product_3_id}":"2","${simple_product_4_id}":"3","${simple_product_5_id}":"4"}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">positions</stringProp>
+            </elementProp>
+            <elementProp name="sort_order" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">sort_order</stringProp>
+            </elementProp>
+            <elementProp name="position_cache_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${position_cache_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">position_cache_key</stringProp>
+            </elementProp>
+            <elementProp name="form_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_form_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">form_key</stringProp>
+            </elementProp>
+            <elementProp name="isAjax" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">isAjax</stringProp>
+            </elementProp>
+          </collectionProp>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain"/>
+        <stringProp name="HTTPSampler.port"/>
+        <stringProp name="HTTPSampler.connect_timeout"/>
+        <stringProp name="HTTPSampler.response_timeout"/>
+        <stringProp name="HTTPSampler.protocol">${request_protocol}</stringProp>
+        <stringProp name="HTTPSampler.contentEncoding"/>
+        <stringProp name="HTTPSampler.path">${base_path}${admin_path}/merchandiser/position/save/</stringProp>
+        <stringProp name="HTTPSampler.method">POST</stringProp>
+        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+        <boolProp name="HTTPSampler.monitor">false</boolProp>
+        <stringProp name="HTTPSampler.embedded_url_re"/>
+      </HTTPSamplerProxy>
+      <hashTree/>
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Verify products added" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="position_cache_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${position_cache_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">position_cache_key</stringProp>
+              <stringProp name="Argument.desc">true</stringProp>
+            </elementProp>
+            <elementProp name="form_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_form_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">form_key</stringProp>
+              <stringProp name="Argument.desc">true</stringProp>
+            </elementProp>
+            <elementProp name="ajax" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">ajax</stringProp>
+            </elementProp>
+            <elementProp name="isAjax" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">isAjax</stringProp>
+              <stringProp name="Argument.desc">true</stringProp>
+            </elementProp>
+          </collectionProp>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain"/>
+        <stringProp name="HTTPSampler.port"/>
+        <stringProp name="HTTPSampler.connect_timeout"/>
+        <stringProp name="HTTPSampler.response_timeout"/>
+        <stringProp name="HTTPSampler.protocol">${request_protocol}</stringProp>
+        <stringProp name="HTTPSampler.contentEncoding"/>
+        <stringProp name="HTTPSampler.path">${base_path}${admin_path}/merchandiser/category/grid/id/${admin_category_id}/</stringProp>
+        <stringProp name="HTTPSampler.method">POST</stringProp>
+        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+        <boolProp name="HTTPSampler.monitor">false</boolProp>
+        <stringProp name="HTTPSampler.embedded_url_re"/>
+      </HTTPSamplerProxy>
+      <hashTree>
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert products added" enabled="true">
+          <collectionProp name="Asserion.test_strings">
+            <stringProp name="417284990">${simple_product_1_name}</stringProp>
+            <stringProp name="1304788671">${simple_product_2_name}</stringProp>
+            <stringProp name="-2102674944">${simple_product_3_name}</stringProp>
+            <stringProp name="-1215171263">${simple_product_4_name}</stringProp>
+            <stringProp name="-327667582">${simple_product_5_name}</stringProp>
+          </collectionProp>
+          <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+          <boolProp name="Assertion.assume_success">false</boolProp>
+          <intProp name="Assertion.test_type">2</intProp>
+        </ResponseAssertion>
+        <hashTree/>
+      </hashTree>
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Save category" enabled="true">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="store_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">store_id</stringProp>
+            </elementProp>
+            <elementProp name="row_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">row_id</stringProp>
+            </elementProp>
+            <elementProp name="entity_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">entity_id</stringProp>
+            </elementProp>
+            <elementProp name="attribute_set_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_attribute_set_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">attribute_set_id</stringProp>
+            </elementProp>
+            <elementProp name="parent_id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${parent_category_id}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">parent_id</stringProp>
+            </elementProp>
+            <elementProp name="level" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_level}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">level</stringProp>
+            </elementProp>
+            <elementProp name="children_count" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">children_count</stringProp>
+            </elementProp>
+            <elementProp name="name" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_name}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">name</stringProp>
+            </elementProp>
+            <elementProp name="meta_title" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">meta_title</stringProp>
+            </elementProp>
+            <elementProp name="display_mode" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">PRODUCTS</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">display_mode</stringProp>
+            </elementProp>
+            <elementProp name="url_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_url_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">url_key</stringProp>
+            </elementProp>
+            <elementProp name="is_active" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">is_active</stringProp>
+            </elementProp>
+            <elementProp name="is_anchor" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">1</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">is_anchor</stringProp>
+            </elementProp>
+            <elementProp name="include_in_menu" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">1</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">include_in_menu</stringProp>
+            </elementProp>
+            <elementProp name="custom_user_parent_settings" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">custom_user_parent_settings</stringProp>
+            </elementProp>
+            <elementProp name="custom_apply_to_products" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">custom_apply_to_products</stringProp>
+            </elementProp>
+            <elementProp name="description" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">description</stringProp>
+            </elementProp>
+            <elementProp name="meta_keywords" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">meta_keywords</stringProp>
+            </elementProp>
+            <elementProp name="custom_layout_update" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">custom_layout_update</stringProp>
+            </elementProp>
+            <elementProp name="use_default[url_key]" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">false</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">use_default[url_key]</stringProp>
+            </elementProp>
+            <elementProp name="use_config[available_sort_by]" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">use_config[available_sort_by]</stringProp>
+            </elementProp>
+            <elementProp name="use_config[default_sort_by]" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">use_config[default_sort_by]</stringProp>
+            </elementProp>
+            <elementProp name="use_config[filter_price_range]" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">true</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">use_config[filter_price_range]</stringProp>
+            </elementProp>
+            <elementProp name="id" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">id</stringProp>
+            </elementProp>
+            <elementProp name="parent" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">parent</stringProp>
+            </elementProp>
+            <elementProp name="url_key_create_redirect" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_url_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">url_key_create_redirect</stringProp>
+            </elementProp>
+            <elementProp name="filter_price_range" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">filter_price_range</stringProp>
+            </elementProp>
+            <elementProp name="default_sort_by" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">position</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">default_sort_by</stringProp>
+            </elementProp>
+            <elementProp name="position_cache_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${position_cache_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">position_cache_key</stringProp>
+            </elementProp>
+            <elementProp name="is_smart_category" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">is_smart_category</stringProp>
+            </elementProp>
+            <elementProp name="smart_category_rules" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">smart_category_rules</stringProp>
+            </elementProp>
+            <elementProp name="sort_order" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">sort_order</stringProp>
+            </elementProp>
+            <elementProp name="vm_category_products" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">false</boolProp>
+              <stringProp name="Argument.value">{"${simple_product_1_id}":0,"${simple_product_2_id}":1,"${simple_product_3_id}":2,"${simple_product_4_id}":3,"${simple_product_5_id}":4}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">vm_category_products</stringProp>
+            </elementProp>
+            <elementProp name="form_key" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_form_key}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">form_key</stringProp>
+            </elementProp>
+            <elementProp name="created_at" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_created_at}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">created_at</stringProp>
+            </elementProp>
+            <elementProp name="updated_at" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">${admin_category_updated_at}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">updated_at</stringProp>
+            </elementProp>
+            <elementProp name="automatic_sorting" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">0</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">automatic_sorting</stringProp>
+            </elementProp>
+            <elementProp name="meta_description" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value"/>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">meta_description</stringProp>
+            </elementProp>
+          </collectionProp>
+        </elementProp>
+        <stringProp name="HTTPSampler.domain"/>
+        <stringProp name="HTTPSampler.port"/>
+        <stringProp name="HTTPSampler.connect_timeout"/>
+        <stringProp name="HTTPSampler.response_timeout"/>
+        <stringProp name="HTTPSampler.protocol">${request_protocol}</stringProp>
+        <stringProp name="HTTPSampler.contentEncoding"/>
+        <stringProp name="HTTPSampler.path">${base_path}${admin_path}/catalog/category/save/</stringProp>
+        <stringProp name="HTTPSampler.method">POST</stringProp>
+        <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+        <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+        <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+        <boolProp name="HTTPSampler.monitor">false</boolProp>
+        <stringProp name="HTTPSampler.embedded_url_re"/>
+      </HTTPSamplerProxy>
+      <hashTree>
+        <BeanShellPreProcessor guiclass="TestBeanGUI" testclass="BeanShellPreProcessor" testname="Prepare path params" enabled="true">
+          <boolProp name="resetInterpreter">false</boolProp>
+          <stringProp name="parameters"/>
+          <stringProp name="filename"/>
+          <stringProp name="script">try {
+	path = vars.get("admin_category_path").replaceAll("\\\\", "");
+	ctx.getCurrentSampler().addArgument("path", path);
+	pathParts = path.split("\\\\");
+	for (int i = 0; i &lt; pathParts.length; i++) {
+	    ctx.getCurrentSampler().addArgument("path_ids[" + i + "]", pathParts[i]);
+	}
+	
+     urlPath = vars.get("admin_category_url_path").replaceAll("\\\\", "");
+     ctx.getCurrentSampler().addArgument("url_path", urlPath);
+} catch (Exception e) {
+    log.error("error???", e);
+}</stringProp>
+        </BeanShellPreProcessor>
+        <hashTree/>
+        <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert category saved" enabled="true">
+          <collectionProp name="Asserion.test_strings">
+            <stringProp name="247270023">You saved the category.</stringProp>
+          </collectionProp>
+          <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+          <boolProp name="Assertion.assume_success">false</boolProp>
+          <intProp name="Assertion.test_type">2</intProp>
+        </ResponseAssertion>
+        <hashTree/>
       </hashTree>
       <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Move category" enabled="true">
         <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
@@ -18573,7 +19033,70 @@ vars.put("new_parent_category_id", props.get("admin_category_ids_list").get(cate
         <stringProp name="ActionProcessor.duration">${__javaScript(Math.round(${adminCategoryManagementDelay}*1000))}</stringProp>
       </TestAction>
       <hashTree/>
+    
+    <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Landing Page" enabled="true">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="HTTPSampler.domain"/>
+      <stringProp name="HTTPSampler.port"/>
+      <stringProp name="HTTPSampler.connect_timeout"/>
+      <stringProp name="HTTPSampler.response_timeout"/>
+      <stringProp name="HTTPSampler.protocol">${request_protocol}</stringProp>
+      <stringProp name="HTTPSampler.contentEncoding"/>
+      <stringProp name="HTTPSampler.path">${base_path}${admin_path}/catalog/category/</stringProp>
+      <stringProp name="HTTPSampler.method">GET</stringProp>
+      <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+      <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+      <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+      <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <boolProp name="HTTPSampler.monitor">false</boolProp>
+      <stringProp name="HTTPSampler.embedded_url_re"/>
+    <stringProp name="TestPlan.comments">mpaf/tool/fragments/ee/admin_category_management/admin_category_management_landing_page.jmx</stringProp></HTTPSamplerProxy>
+    <hashTree>
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="Accept-Language" elementType="Header">
+            <stringProp name="Header.name">Accept-Language</stringProp>
+            <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
+          </elementProp>
+          <elementProp name="Accept" elementType="Header">
+            <stringProp name="Header.name">Accept</stringProp>
+            <stringProp name="Header.value">text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</stringProp>
+          </elementProp>
+          <elementProp name="User-Agent" elementType="Header">
+            <stringProp name="Header.name">User-Agent</stringProp>
+            <stringProp name="Header.value">Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0</stringProp>
+          </elementProp>
+          <elementProp name="Accept-Encoding" elementType="Header">
+            <stringProp name="Header.name">Accept-Encoding</stringProp>
+            <stringProp name="Header.value">gzip, deflate</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
+      <hashTree/>
+      <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Extract position cache key" enabled="true">
+        <stringProp name="RegexExtractor.useHeaders">false</stringProp>
+        <stringProp name="RegexExtractor.refname">position_cache_key</stringProp>
+        <stringProp name="RegexExtractor.regex">\\"positionCacheKey\\": \\"([^\\]*)\\"</stringProp>
+        <stringProp name="RegexExtractor.template">$1$</stringProp>
+        <stringProp name="RegexExtractor.default"/>
+        <stringProp name="RegexExtractor.match_number">1</stringProp>
+      </RegexExtractor>
+      <hashTree/>
+      <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert position cache key" enabled="true">
+        <collectionProp name="Asserion.test_strings">
+          <stringProp name="2845929">^.+$</stringProp>
+        </collectionProp>
+        <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+        <boolProp name="Assertion.assume_success">false</boolProp>
+        <intProp name="Assertion.test_type">1</intProp>
+        <stringProp name="Assertion.scope">variable</stringProp>
+        <stringProp name="Scope.variable">position_cache_key</stringProp>
+      </ResponseAssertion>
+      <hashTree/>
     </hashTree>
+  </hashTree>
   </hashTree>
   </hashTree>
 
