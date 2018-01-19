@@ -373,21 +373,22 @@ class Platformsh
     /**
      * Run the ./bin/magento command with optional arguments.
      *
-     * @param       $command
-     * @param array $args
+     * @param        $command
+     * @param array  $options
+     * @param string $args
      * @throws \RuntimeException
      */
-    private function executeMagentoCommand($command, array $args = [])
+    private function executeMagentoCommand($command, array $options = [], $args = '')
     {
         $cliFlags = [];
         
         /*
-         * Depending on whether it's a --key=value or a --value format the argument for passing to bin/magento.
+         * Depending on whether it's a --key=value or a --value format for the option passed to bin/magento.
          */
-        foreach ($args as $pairKey => $pairValue) {
-            $isArgWithValue = is_string($pairKey);
+        foreach ($options as $pairKey => $pairValue) {
+            $isOptWithValue = is_string($pairKey);
             
-            if ($isArgWithValue) {
+            if ($isOptWithValue) {
                 $cliFlags[] = sprintf('--%s=%s', $pairKey, $pairValue);
             } else {
                 $cliFlags[] = sprintf('--%s', $pairValue);
@@ -396,11 +397,11 @@ class Platformsh
     
         $cliFlagsString = implode(' ', $cliFlags);
         
-        $this->log(sprintf('Running bin/magento %s %s', $command, $cliFlagsString));
+        $this->log(sprintf('Running bin/magento %s %s %s', $command, $cliFlagsString, $args));
         
         $this->execute(
             implode(' ', [
-                $this->getMagentoFilePath('bin/magento'), $command, $cliFlagsString
+                $this->getMagentoFilePath('bin/magento'), $command, $cliFlagsString, $args
             ])
         );
     }
@@ -523,7 +524,7 @@ class Platformsh
         $mode = ($this->desiredApplicationMode) ? $this->desiredApplicationMode : self::MAGENTO_PRODUCTION_MODE;
         
         $this->log(sprintf('Setting application mode to: %s', $mode));
-        $this->executeMagentoCommand('deploy:mode:set ' . $mode, ['skip-compliation']);
+        $this->executeMagentoCommand('deploy:mode:set', ['skip-compliation'], $mode);
     }
     
     /**
