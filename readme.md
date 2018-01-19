@@ -2,6 +2,11 @@
 
 This repository contains the code and configuration required to deploy Magento 2.x to a platform.sh environment.
 
+The admin interface an be accessed at `/admin` with the following credentials:
+
+* Username: `admin`
+* Password: `Password123`
+
 ## Updating Magento Version
 
 To update the Magento version in this repository, perform the following actions:
