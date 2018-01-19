@@ -1,0 +1,87 @@
+name: magento2demo
+
+type: 'php:7.1'
+
+build:
+  flavor: none
+
+relationships:
+  mysql: 'mysql:mysql'
+  redis: 'redis:redis'
+#  elasticsearch: 'elasticsearch:elasticsearch'
+#  rabbitmq: 'rabbitmq:rabbitmq'
+
+disk: 2048
+
+runtime:
+  extensions:
+    - mcrypt
+    - redis
+    - xsl
+    - json
+
+mounts:
+  "magento/app/etc":
+    source: local
+    source_path: app/etc
+
+  "magento/var":
+    source: local
+    source_path: var
+
+  "magento/pub/media":
+    source: local
+    source_path: pub/media
+
+  "magento/pub/static":
+    source: local
+    source_path: pub/static
+
+  "magento/generated":
+    source: local
+    source_path: generated
+
+crons:
+  cronrun:
+    spec: "*/1 * * * *"
+    cmd: "php ./magento/bin/magento cron:run"
+
+web:
+  locations:
+    "/":
+      # The public directory of the app, relative to its root.
+      root: "magento/pub"
+      # The front-controller script to send non-static requests to.
+      passthru: "/index.php"
+      index:
+          - index.php
+      expires: -1
+      scripts: true
+      allow: false
+      rules:
+        \.(css|js|map|hbs|gif|jpe?g|png|tiff|wbmp|ico|jng|bmp|svgz|midi?|mp?ga|mp2|mp3|m4a|ra|weba|3gpp?|mp4|mpe?g|mpe|ogv|mov|webm|flv|mng|asx|asf|wmv|avi|ogx|swf|jar|ttf|eot|woff|otf|html?)$:
+          allow: true
+        /robots\.txt$:
+          allow: true
+    "/media":
+      root: "magento/pub/media"
+      allow: true
+      scripts: false
+      passthru: "/index.php"
+    "/static":
+      root: "magento/pub/static"
+      allow: true
+      scripts: false
+      rules:
+        ^/static/version\d+/(?<resource>.*)$:
+          passthru: "/static/$resource"
+
+hooks:
+  build: |
+    env
+    composer global require hirak/prestissimo
+    composer install --working-dir=magento --no-interaction --no-dev --optimize-autoloader
+    php ./bin/plsh-magento-build.php
+  deploy: |
+    env
+    php ./bin/plsh-magento-deploy.php

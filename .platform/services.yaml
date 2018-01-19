@@ -1,0 +1,14 @@
+mysql:
+  type: mysql:10.2
+  disk: 1024
+
+redis:
+  type: redis:3.2
+
+#elasticsearch:
+#  type: elasticsearch:2.4
+#  disk: 512
+#
+#rabbitmq:
+#  type: rabbitmq:3.5
+#  disk: 256

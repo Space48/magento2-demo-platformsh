@@ -1,0 +1,8 @@
+version: "2"
+
+services:
+  cli:
+    image: meanbee/magento2-php:7.1-cli
+    working_dir: /app
+    volumes:
+      - ./:/app
