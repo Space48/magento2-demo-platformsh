@@ -535,7 +535,7 @@ class DemoProvisioner
         $mode = ($this->desiredApplicationMode) ? $this->desiredApplicationMode : self::MAGENTO_PRODUCTION_MODE;
         
         $this->log(sprintf('Setting application mode to: %s', $mode));
-        $this->executeMagentoCommand('deploy:mode:set', ['skip-compliation'], $mode);
+        $this->executeMagentoCommand('deploy:mode:set', ['skip-compilation'], $mode);
     }
     
     /**
