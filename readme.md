@@ -12,3 +12,4 @@ To update the Magento version in this repository, perform the following actions:
         --repository-url=https://repo.magento.com \
         magento/project-enterprise-edition \
         magento
+   magento/bin/magento sampledata:deploy
