@@ -173,10 +173,10 @@ class Platformsh
         $this->dbPassword = $relationships[$this->serviceDatabase][0]['password'];
         
         $this->adminUsername = isset($var['ADMIN_USERNAME']) ? $var['ADMIN_USERNAME'] : 'admin';
-        $this->adminFirstname = isset($var['ADMIN_FIRSTNAME']) ? $var['ADMIN_FIRSTNAME'] : 'John';
-        $this->adminLastname = isset($var['ADMIN_LASTNAME']) ? $var['ADMIN_LASTNAME'] : 'Doe';
-        $this->adminEmail = isset($var['ADMIN_EMAIL']) ? $var['ADMIN_EMAIL'] : 'john@example.com';
-        $this->adminPassword = isset($var['ADMIN_PASSWORD']) ? $var['ADMIN_PASSWORD'] : 'admin12';
+        $this->adminFirstname = isset($var['ADMIN_FIRSTNAME']) ? $var['ADMIN_FIRSTNAME'] : 'Space';
+        $this->adminLastname = isset($var['ADMIN_LASTNAME']) ? $var['ADMIN_LASTNAME'] : 'Forty Eight';
+        $this->adminEmail = isset($var['ADMIN_EMAIL']) ? $var['ADMIN_EMAIL'] : 'magento-demo@space48.com';
+        $this->adminPassword = isset($var['ADMIN_PASSWORD']) ? $var['ADMIN_PASSWORD'] : 'Password123';
         $this->adminUrl = isset($var['ADMIN_URL']) ? $var['ADMIN_URL'] : 'admin';
         
         $this->desiredApplicationMode = isset($var['APPLICATION_MODE']) ? $var['APPLICATION_MODE'] : false;
