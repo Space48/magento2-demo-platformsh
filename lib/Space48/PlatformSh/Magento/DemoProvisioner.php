@@ -1,8 +1,19 @@
 <?php
 
-namespace Platformsh\Magento;
+namespace Space48\PlatformSh\Magento;
 
-class Platformsh
+/**
+ * Class DemoProvisioner
+ *
+ * Executes the necessary commands required to get a Magento 2.x (>= 2.2) installation running on platform.sh. Assumes
+ * that there's a magento/ directory containing a project that has already had its composer dependencies installed.
+ *
+ * @link https://github.com/platformsh/platformsh-example-magento
+ * @link https://github.com/cedricziel/platformsh-magento2-configuration/tree/cedricziel-patch-1
+ *
+ * @package Space48\PlatformSh\Magento
+ */
+class DemoProvisioner
 {
     const MAGIC_ROUTE = '{default}';
     
@@ -47,7 +58,7 @@ class Platformsh
     protected $desiredApplicationMode;
     
     /**
-     * Parse Platform.sh routes to more readable format.
+     * Read the platform.sh environment variables to get the routes associated with this environment.
      */
     public function initRoutes()
     {

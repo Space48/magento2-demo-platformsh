@@ -1,6 +1,8 @@
 <?php
 
-include __DIR__ . '/lib/Platformsh/Magento/Platformsh.php';
+include __DIR__ . '/../lib/Space48/PlatformSh/Magento/DemoProvisioner.php';
 
-$platformSh = new \Platformsh\Magento\Platformsh();
-$platformSh->deploy();
+use Space48\PlatformSh\Magento\DemoProvisioner;
+
+$magentoProvisioner = new DemoProvisioner();
+$magentoProvisioner->deploy();
