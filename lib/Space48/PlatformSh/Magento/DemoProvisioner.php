@@ -240,14 +240,13 @@ class DemoProvisioner
     {
         $this->log('Installing Magento.');
         
-        $urlUnsecure = $this->urls['unsecure'][''];
         $urlSecure = $this->urls['secure'][''];
         
         $installArgs = [
             'session-save' => 'db',
             'cleanup-database',
             'currency' => $this->defaultCurrency,
-            'base-url' => $urlUnsecure,
+            'base-url' => $urlSecure,
             'base-url-secure' => $urlSecure,
             'use-rewrites' => '1',
             'language' => 'en_US',
