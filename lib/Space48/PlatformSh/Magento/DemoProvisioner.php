@@ -381,6 +381,41 @@ class DemoProvisioner
     }
     
     /**
+     * Update a Magento configuration item.
+     *
+     * @param      $path
+     * @param      $value
+     * @param null $scope
+     * @param null $scopeCode
+     * @throws \RuntimeException
+     */
+    private function setConfig($path, $value, $scope = null, $scopeCode = null)
+    {
+        $logMessage = sprintf('Updating config: %s = %s', $path, $value);
+
+        $options = [];
+        
+        if ($scope !== null) {
+            $options['scope'] = $scope;
+            $logMessage .= sprintf(' (scope: %s)', $scope);
+        }
+        
+        if ($scopeCode !== null) {
+            $options['scope-code'] = $scopeCode;
+
+            $logMessage .= sprintf(' (scope code: %s)', $scopeCode);
+        }
+        
+        $this->log($logMessage);
+        
+        $this->executeMagentoCommand(
+            'config:set',
+            $options,
+            sprintf('%s %s', escapeshellarg($path), escapeshellarg($value))
+        );
+    }
+    
+    /**
      * Run the ./bin/magento command with optional arguments.
      *
      * @param        $command
