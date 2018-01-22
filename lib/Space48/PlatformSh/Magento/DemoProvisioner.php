@@ -400,7 +400,7 @@ class DemoProvisioner
             $isOptWithValue = is_string($pairKey);
             
             if ($isOptWithValue) {
-                $cliFlags[] = sprintf('--%s=%s', $pairKey, $pairValue);
+                $cliFlags[] = sprintf('--%s=%s', $pairKey, escapeshellarg($pairValue));
             } else {
                 $cliFlags[] = sprintf('--%s', $pairValue);
             }
