@@ -280,7 +280,7 @@ class DemoProvisioner
         
         $this->updateConfigurationFile();
         $this->updateAdminCredentials();
-        $this->updateUrls();
+        $this->updateConfiguration();
         $this->executeMagentoCommand('setup:upgrade', ['keep-generated']);
         $this->executeMagentoCommand('cache:flush');
     }
@@ -296,24 +296,19 @@ class DemoProvisioner
     }
     
     /**
-     * Update secure and unsecure URLs
+     * Update the Magento Configuration.
+     *
+     * @throws \RuntimeException
      */
-    protected function updateUrls()
+    protected function updateConfiguration()
     {
-        $this->log('Updating secure and unsecure URLs.');
+        $urlSecure = $this->urls['secure'][''];
         
-        foreach ($this->urls as $urlType => $urls) {
-            foreach ($urls as $route => $url) {
-                $prefix = 'unsecure' === $urlType ? self::PREFIX_UNSECURE : self::PREFIX_SECURE;
-                if (!strlen($route)) {
-                    $this->executeDbQuery("update core_config_data set value = '$url' where path = 'web/$urlType/base_url' and scope_id = '0';");
-                    continue;
-                }
-                $likeKey = $prefix . $route . '%';
-                $likeKeyParsed = $prefix . str_replace('.', '---', $route) . '%';
-                $this->executeDbQuery("update core_config_data set value = '$url' where path = 'web/$urlType/base_url' and (value like '$likeKey' or value like '$likeKeyParsed');");
-            }
-        }
+        $this->setConfig('web/unsecure/base_url', $urlSecure);
+        $this->setConfig('web/secure/base_url', $urlSecure);
+    
+        $this->setConfig('admin/security/use_form_key', 1);
+        $this->setConfig('web/secure/use_in_frontend', 1);
     }
     
     /**
