@@ -278,7 +278,7 @@ class DemoProvisioner
     {
         $this->log('Updating Magento');
         
-        $this->updateConfiguration();
+        $this->updateConfigurationFile();
         $this->updateAdminCredentials();
         $this->updateUrls();
         $this->executeMagentoCommand('setup:upgrade', ['keep-generated']);
@@ -329,7 +329,7 @@ class DemoProvisioner
     /**
      * Update env.php file content
      */
-    protected function updateConfiguration()
+    protected function updateConfigurationFile()
     {
         $this->log('Updating env.php with new configuration from environment.');
         
