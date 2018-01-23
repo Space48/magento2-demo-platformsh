@@ -7,6 +7,15 @@ The admin interface an be accessed at `/admin` with the following credentials:
 * Username: `admin`
 * Password: `Password123`
 
+## Creating your own Demo Store
+
+Platform.sh is configured to listen to this repository. Any branch that's pushed here will be created as an inactive environment. To get your own demo store:
+
+* Create a new branch
+* Optionally, make any code changes that you need to make
+* Push the branch to GitHub
+* Activate the environment in Platform.sh
+
 ## Updating Magento Version
 
 To update the Magento version in this repository, perform the following actions:
