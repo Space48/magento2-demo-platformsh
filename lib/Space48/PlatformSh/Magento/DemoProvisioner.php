@@ -161,6 +161,8 @@ class DemoProvisioner
         } else {
             $this->updateMagento();
         }
+    
+        $this->updateConfiguration();
         $this->processMagentoMode();
         
         $this->executeMagentoCommand('setup:static-content:deploy');
@@ -280,7 +282,6 @@ class DemoProvisioner
         
         $this->updateConfigurationFile();
         $this->updateAdminCredentials();
-        $this->updateConfiguration();
         $this->executeMagentoCommand('setup:upgrade', ['keep-generated']);
         $this->executeMagentoCommand('cache:flush');
     }
