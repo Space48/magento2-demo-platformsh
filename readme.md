@@ -5,7 +5,7 @@ This repository contains the code and configuration required to deploy Magento 2
 The admin interface can be accessed at `/admin` with the following credentials:
 
 * Username: `admin`
-* Password: `Password123`
+* Password: `Password1234`
 
 ## Creating your own Demo Store
 
